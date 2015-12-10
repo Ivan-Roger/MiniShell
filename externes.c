@@ -32,7 +32,7 @@ static void execute_commande_dans_un_fils(job_t *job,int num_comm, ligne_analyse
   sigemptyset(&sig->sa_mask);
 
   if (num_comm < ligne_analysee->nb_fils) { // On créér le tube uniquement si le fils qui doit être crée n'est pas le dernier.
-    if (pipe(tubes[num_comm-1])==-1)
+    if (pipe(tubes[num_comm])==-1)
       {perror("Echec création tube"); exit(errno);}
   }
 
