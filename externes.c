@@ -30,8 +30,11 @@
  * -----------------------------------------------------------------------*/
 static void execute_commande_dans_un_fils(job_t *job,int num_comm, ligne_analysee_t *ligne_analysee, struct sigaction *sig)
 {
-  if (num_comm < ligne_analysee->nb_fils-1) { // On créér le tube uniquement si le fils qui doit être crée n'est pas le dernier.
+  if (ligne_analysee->nb_fils>1) { // On créér le tube uniquement si il y a plus d'une commande
+    printf("    > Pipe crée\n");
     if (pipe(job->tubes[num_comm])==-1) {perror("Echec création tube"); exit(errno);}
+  } else {
+    printf("    > Pas de pipe\n");
   }
 
   pid_t res_f = fork(); // On crée le fils
@@ -40,14 +43,21 @@ static void execute_commande_dans_un_fils(job_t *job,int num_comm, ligne_analyse
     sig->sa_handler=SIG_DFL; // Remise a zero des handlers de signaux
     sigaction(SIGINT,sig,NULL);
 
-    printf("Execution commande %d/%d : %s (pid:%d)\n",num_comm+1,ligne_analysee->nb_fils,ligne_analysee->commandes[num_comm][0],getpid());
-    if (num_comm == 0) { // On initialise le tube en fonction de la position de la commande dans la ligne
-      gerer_tube_premier_fils(job,num_comm);
-    } else if (num_comm == (ligne_analysee->nb_fils)-1) {
-      gerer_tube_dernier_fils(job,num_comm);
-    } else {
-      gerer_tube_fils_intermediaire(job,num_comm);
+    printf("    Execution commande %d/%d : %s (pid:%d)\n",num_comm+1,ligne_analysee->nb_fils,ligne_analysee->commandes[num_comm][0],getpid());
+    if (ligne_analysee->nb_fils>1) { // On ne crée un tube que si il y a plus d'une commande
+      if (num_comm == 0) { // On initialise le tube en fonction de la position de la commande dans la ligne
+        gerer_tube_premier_fils(job,num_comm);
+      } else if (num_comm == (ligne_analysee->nb_fils)-1) {
+        gerer_tube_dernier_fils(job,num_comm);
+      } else {
+        gerer_tube_fils_intermediaire(job,num_comm);
+      }
     }
+
+    // DEBUG : Affiche l'entrée et la sortie
+    FILE* finfo=fopen("/dev/pts/2","w");
+    fprintf(finfo," IN: %d\nOUT: %d\n",STDIN_FILENO,STDOUT_FILENO);
+    fclose(finfo);
 
     int res_e = execvp(ligne_analysee->commandes[num_comm][0],ligne_analysee->commandes[num_comm]); // On execute la commande avec les arguments
     if (res_e==-1) {perror("Echec execvp"); exit(errno);}
@@ -75,9 +85,9 @@ void executer_commandes(job_t *job, ligne_analysee_t *ligne_analysee, struct sig
     pid_t res_w = waitpid(job->pids[i],NULL,0);
     if (res_w==-1) {perror("Echec wait"); exit(errno);}
 
-    printf("--> Commande terminée\n");
+    printf("    --> Commande terminée\n");
   }
-
+  printf("Execution terminée\n");
   // on ne se sert plus de la ligne : ménage
   *ligne_analysee->ligne='\0';
 }
