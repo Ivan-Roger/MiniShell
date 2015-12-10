@@ -43,7 +43,7 @@ static void execute_commande_dans_un_fils(job_t *job,int num_comm, ligne_analyse
     sig->sa_handler=SIG_DFL; // Remise a zero des handlers de signaux
     sigaction(SIGINT,sig,NULL);
 
-    printf("    Execution commande %d/%d : %s (pid:%d)\n",num_comm+1,ligne_analysee->nb_fils,ligne_analysee->commandes[num_comm][0],getpid());
+    printf("    Execution commande %d/%d : '%s' (pid:%d)\n",num_comm+1,ligne_analysee->nb_fils,ligne_analysee->commandes[num_comm][0],getpid());
     if (ligne_analysee->nb_fils>1) { // On ne crée un tube que si il y a plus d'une commande
       if (num_comm == 0) { // On initialise le tube en fonction de la position de la commande dans la ligne
         gerer_tube_premier_fils(job,num_comm);
@@ -56,7 +56,7 @@ static void execute_commande_dans_un_fils(job_t *job,int num_comm, ligne_analyse
 
     // DEBUG : Affiche l'entrée et la sortie
     FILE* finfo=fopen("/dev/pts/2","w");
-    fprintf(finfo," IN: %d\nOUT: %d\n",STDIN_FILENO,STDOUT_FILENO);
+    fprintf(finfo," IN: %d\nOUT: %d\n",fileno(stdin),fileno(stdout)); //
     fclose(finfo);
 
     int res_e = execvp(ligne_analysee->commandes[num_comm][0],ligne_analysee->commandes[num_comm]); // On execute la commande avec les arguments
