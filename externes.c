@@ -31,10 +31,18 @@ static void execute_commande_dans_un_fils(job_t *job,int num_comm, ligne_analyse
   sig->sa_flags=0;
   sigemptyset(&sig->sa_mask);
 
+  if (num_comm < ligne_analysee->nb_fils) { // On créér le tube uniquement si le fils qui doit être crée n'est pas le dernier.
+    if (pipe(tubes[num_comm-1])==-1)
+      {perror("Echec création tube"); exit(errno);}
+  }
+
   pid_t res_f = fork(); // On crée le fils
   if (res_f==0) { // Si on est dans le fils :
     sig->sa_handler=SIG_DFL;
     sigaction(SIGINT,sig,NULL);
+
+    
+
     int res_e = execvp(*ligne_analysee->commandes[num_comm],*ligne_analysee->commandes); // On execute la commande avec les arguments
     if (res_e==-1) {perror("Echec execvp"); exit(errno);}
   }
