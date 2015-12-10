@@ -111,14 +111,6 @@ void gerer_tube_fils_intermediaire(job_t *job, int num_comm){
  * Fait exécuter les commandes de la ligne par des fils
  * -----------------------------------------------------------------------*/
 void gerer_tube_dernier_fils(job_t *job, int num_comm){
-
-
-
-
-
-
-
-
-
-
+  close(job->tubes[num_comm-1][1]); // Je ne fais que lire, je ferme l'ecriture
+  dup2(job->tubes[num_comm-1][0],STDIN_FILENO); // Je transforme la sortie du tube en entrée standard
 }
