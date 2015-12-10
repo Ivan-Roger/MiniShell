@@ -17,8 +17,8 @@
 /*-------------------------------------------------------------------------------
  * Macro pour éviter le warning "unused parameter" dans une version intermédiaire
  * -----------------------------------------------------------------------------*/
-//#define UNUSED(x) (void)(x)
-
+#define UNUSED(x) (void)(x)
+#define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 
 
 /*--------------------------------------------------------------------------
@@ -28,13 +28,9 @@
  * -----------------------------------------------------------------------*/
 static void execute_commande_dans_un_fils(job_t *job,int num_comm, ligne_analysee_t *ligne_analysee, struct sigaction *sig)
 {
-  sig->sa_flags=0;
-  sigemptyset(&sig->sa_mask);
-
+  UNUSED(sig);
   pid_t res_f = fork(); // On crée le fils
   if (res_f==0) { // Si on est dans le fils :
-    sig->sa_handler=SIG_DFL;
-    sigaction(SIGINT,sig,NULL);
     int res_e = execvp(*ligne_analysee->commandes[num_comm],*ligne_analysee->commandes); // On execute la commande avec les arguments
     if (res_e==-1) {perror("Echec execvp"); exit(errno);}
   }
@@ -48,12 +44,15 @@ void executer_commandes(job_t *job, ligne_analysee_t *ligne_analysee, struct sig
   // recopie de la ligne de commande dans la structure job
   strcpy(job->nom,ligne_analysee->ligne);
 
-  // on lance l'exécution de la commande dans un fils
-  execute_commande_dans_un_fils(job,0,ligne_analysee, sig);
+  for (int i=0; i<ARRAY_SIZE(ligne_analysee->commandes); i++) {
+  
+    // on lance l'exécution de la commande dans un fils
+    execute_commande_dans_un_fils(job,0,ligne_analysee, sig);
 
-  pid_t res_w = waitpid(job->pids[0],NULL,0);
-  if (res_w==-1) {perror("Echec wait"); exit(errno);}
+    pid_t res_w = waitpid(job->pids[0],NULL,0);
+    if (res_w==-1) {perror("Echec wait"); exit(errno);}
 
+  }
   // on ne se sert plus de la ligne : ménage
   *ligne_analysee->ligne='\0';
 }
