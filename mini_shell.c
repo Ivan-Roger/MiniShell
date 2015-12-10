@@ -42,7 +42,7 @@
 /*-------------------------------------------------------------------------------
  * Macro pour éviter le warning "unused parameter" dans une version intermédiaire
  * -----------------------------------------------------------------------------*/
-#define UNUSED(x) (void)(x)
+//#define UNUSED(x) (void)(x)
 
 /*--------------------------------------------------------------------------
  * Variable globale nécessaire pour l'utiliser dans traite_signal()
@@ -59,9 +59,12 @@ static void traite_signal(int signal_recu)
 {
 
    switch (signal_recu) {
-    // TODO : à compléter
+    case SIGINT:
+      printf("\n");
+      affiche_invite();
+      break;
     default:
-         printf("Signal inattendu\n");
+      printf("Signal inattendu %d\n",signal_recu);
   }
 }
 
@@ -73,8 +76,8 @@ static void initialiser_gestion_signaux(struct sigaction *sig)
    sig->sa_flags=0;
    sigemptyset(&sig->sa_mask);
 
-   // TODO : supprimer la ligne et compléter la procédure
-   UNUSED(traite_signal);
+   sig->sa_handler=traite_signal;
+   sigaction(SIGINT,sig,NULL);
 }
 
 /*--------------------------------------------------------------------------
@@ -101,11 +104,15 @@ static void affiche_invite(void)
 static void execute_ligne(ligne_analysee_t *ligne_analysee, job_set_t *mes_jobs, struct sigaction *sig)
 {
    job_t *j;
+   sig->sa_flags=0;
+   sigemptyset(&sig->sa_mask);
 
    // on extrait les commandes présentes dans la ligne de commande
    // et l'on détermine si elle doit être exécutée en avant-plan
    int isfg=extrait_commandes(ligne_analysee);
 
+   sig->sa_handler=SIG_IGN;
+   sigaction(SIGINT,sig,NULL);
    // s'il ne s'agit pas d'une commande interne au shell,
    // la ligne est exécutée par un ou des fils
    if (! commande_interne(ligne_analysee,mes_jobs) )
@@ -120,6 +127,8 @@ static void execute_ligne(ligne_analysee_t *ligne_analysee, job_set_t *mes_jobs,
 
       // TODO : à compléter
   }
+  sig->sa_handler=traite_signal;
+  sigaction(SIGINT,sig,NULL);
 
   // ménage
   *ligne_analysee->ligne='\0';
