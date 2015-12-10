@@ -18,19 +18,20 @@
 #include "jobs.h"
 #include "internes.h"
 
-/*-------------------------------------------------------------------------------
- * Macro pour éviter le warning "unused parameter" dans une version intermédiaire
- * -----------------------------------------------------------------------------*/
-#define UNUSED(x) (void)(x)
-
 /*--------------------------------------------------------------------------
  * change directory
  * -----------------------------------------------------------------------*/
 static int mon_cd(char *rep)
 {
-  // TODO : supprimer la ligne et compléter la procédure
-  UNUSED(rep);
-    return 1;
+  /*
+  char* dest = (strcmp(rep,"")<=0?getenv("HOME"):rep); // Si rep est null alors HOME sinon rep
+  chdir(dest);
+  */
+  if (rep==NULL)
+    chdir(getenv("HOME"));
+  else
+    chdir(rep);
+  return 1;
 }
 
 /*--------------------------------------------------------------------------
