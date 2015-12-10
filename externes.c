@@ -31,7 +31,7 @@ static void execute_commande_dans_un_fils(job_t *job,int num_comm, ligne_analyse
   sig->sa_flags=0;
   sigemptyset(&sig->sa_mask);
 
-  if (num_comm < ligne_analysee->nb_fils) { // On créér le tube uniquement si le fils qui doit être crée n'est pas le dernier.
+  if (num_comm < ligne_analysee->nb_fils-1) { // On créér le tube uniquement si le fils qui doit être crée n'est pas le dernier.
     if (pipe(job->tubes[num_comm])==-1)
       {perror("Echec création tube"); exit(errno);}
   }
@@ -40,6 +40,14 @@ static void execute_commande_dans_un_fils(job_t *job,int num_comm, ligne_analyse
   if (res_f==0) { // Si on est dans le fils :
     sig->sa_handler=SIG_DFL;
     sigaction(SIGINT,sig,NULL);
+
+    if (num_comm == 0) {
+      gerer_tube_premier_fils(job,num_comm);
+    } else if (num_comm == NB_MAX_COMMANDES-1){
+      gerer_tube_dernier_fils(job,num_comm);
+    } else {
+      gerer_tube_fils_intermediaire(job,num_comm);
+    }
 
     int res_e = execvp(*ligne_analysee->commandes[num_comm],*ligne_analysee->commandes); // On execute la commande avec les arguments
     if (res_e==-1) {perror("Echec execvp"); exit(errno);}
@@ -81,7 +89,7 @@ void gerer_tube_premier_fils(job_t *job, int num_comm) {
 }
 
 /*--------------------------------------------------------------------------
- * Gestion de l'entrée et la sortie d'un fils intermédiaire'
+ * Gestion de l'entrée et la sortie d'un fils intermédiaire
  * -----------------------------------------------------------------------*/
 void gerer_tube_fils_intermediaire(job_t *job, int num_comm){
 
@@ -90,9 +98,9 @@ void gerer_tube_fils_intermediaire(job_t *job, int num_comm){
 }
 
 /*--------------------------------------------------------------------------
- * Fait exécuter les commandes de la ligne par des fils
+ * Gestion de l'entrée du dernier fils
  * -----------------------------------------------------------------------*/
 void gerer_tube_dernier_fils(job_t *job, int num_comm){
-  close(job->tubes[num_comm-1][1]); // Je ne fais que lire, je ferme l'ecriture
-  dup2(job->tubes[num_comm-1][0],STDIN_FILENO); // Je transforme la sortie du tube en entrée standard
+  close(job->tubes[num_comm-1][1]); //le premier fils n'écrit pas dans le tube
+  dup2(job->tubes[num_comm-1][0],STDIN_FILENO); //le dernier fils lit depuis le tube et écrit dans stdout
 }
