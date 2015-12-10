@@ -32,7 +32,7 @@ static void execute_commande_dans_un_fils(job_t *job,int num_comm, ligne_analyse
   sigemptyset(&sig->sa_mask);
 
   if (num_comm < ligne_analysee->nb_fils) { // On créér le tube uniquement si le fils qui doit être crée n'est pas le dernier.
-    if (pipe(tubes[num_comm-1])==-1)
+    if (pipe(tubes[num_commx])==-1)
       {perror("Echec création tube"); exit(errno);}
   }
 
@@ -57,9 +57,9 @@ void executer_commandes(job_t *job, ligne_analysee_t *ligne_analysee, struct sig
   for (int i=0; i<ARRAY_SIZE(ligne_analysee->commandes); i++) {
 
     // on lance l'exécution de la commande dans un fils
-    execute_commande_dans_un_fils(job,0,ligne_analysee, sig);
+    execute_commande_dans_un_fils(job,i,ligne_analysee, sig);
 
-    pid_t res_w = waitpid(job->pids[0],NULL,0);
+    pid_t res_w = waitpid(job->pids[i],NULL,0);
     if (res_w==-1) {perror("Echec wait"); exit(errno);}
 
   }
