@@ -17,10 +17,8 @@
 /*-------------------------------------------------------------------------------
  * Macro pour éviter le warning "unused parameter" dans une version intermédiaire
  * -----------------------------------------------------------------------------*/
-//#define UNUSED(x) (void)(x)
-
-// Macro pour la taille d'un tableau
-#define ARRAY_SIZE(x) (int)(sizeof(x)/sizeof(x[0]))
+#define UNUSED(x) (void)(x)
+#define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 
 
 /*--------------------------------------------------------------------------
@@ -33,7 +31,7 @@ static void execute_commande_dans_un_fils(job_t *job,int num_comm, ligne_analyse
   sig->sa_flags=0;
   sigemptyset(&sig->sa_mask);
 
-  if (num_comm < ligne_analysee->nb_fils-1) { // On créér le tube uniquement si le fils qui doit être crée n'est pas le dernier.
+  if (num_comm < ligne_analysee->nb_fils) { // On créér le tube uniquement si le fils qui doit être crée n'est pas le dernier.
     if (pipe(job->tubes[num_comm])==-1)
       {perror("Echec création tube"); exit(errno);}
   }
@@ -43,15 +41,7 @@ static void execute_commande_dans_un_fils(job_t *job,int num_comm, ligne_analyse
     sig->sa_handler=SIG_DFL;
     sigaction(SIGINT,sig,NULL);
 
-    if (num_comm == 0) {
-      gerer_tube_premier_fils(job,num_comm);
-    } else if (num_comm == NB_MAX_COMMANDES-1){
-      gerer_tube_dernier_fils(job,num_comm);
-    } else {
-      gerer_tube_fils_intermediaire(job,num_comm);
-    }
-
-    int res_e = execvp(ligne_analysee->commandes[num_comm][0],ligne_analysee->commandes[num_comm]); // On execute la commande avec les arguments
+    int res_e = execvp(*ligne_analysee->commandes[num_comm],*ligne_analysee->commandes); // On execute la commande avec les arguments
     if (res_e==-1) {perror("Echec execvp"); exit(errno);}
   }
 
@@ -70,12 +60,14 @@ void executer_commandes(job_t *job, ligne_analysee_t *ligne_analysee, struct sig
 
   for (int i=0; i<ARRAY_SIZE(ligne_analysee->commandes); i++) {
 
+    printf("Execute commande\n");
     // on lance l'exécution de la commande dans un fils
     execute_commande_dans_un_fils(job,i,ligne_analysee, sig);
 
+    printf("Commande démarée\n");
     pid_t res_w = waitpid(job->pids[i],NULL,0);
     if (res_w==-1) {perror("Echec wait"); exit(errno);}
-
+    
   }
   // on ne se sert plus de la ligne : ménage
   *ligne_analysee->ligne='\0';
@@ -91,7 +83,7 @@ void gerer_tube_premier_fils(job_t *job, int num_comm) {
 }
 
 /*--------------------------------------------------------------------------
- * Gestion de l'entrée et la sortie d'un fils intermédiaire
+ * Gestion de l'entrée et la sortie d'un fils intermédiaire'
  * -----------------------------------------------------------------------*/
 void gerer_tube_fils_intermediaire(job_t *job, int num_comm){
 
@@ -100,9 +92,9 @@ void gerer_tube_fils_intermediaire(job_t *job, int num_comm){
 }
 
 /*--------------------------------------------------------------------------
- * Gestion de l'entrée du dernier fils
+ * Fait exécuter les commandes de la ligne par des fils
  * -----------------------------------------------------------------------*/
 void gerer_tube_dernier_fils(job_t *job, int num_comm){
-  close(job->tubes[num_comm-1][1]); //le premier fils n'écrit pas dans le tube
-  dup2(job->tubes[num_comm-1][0],STDIN_FILENO); //le dernier fils lit depuis le tube et écrit dans stdout
+  close(job->tubes[num_comm-1][1]); // Je ne fais que lire, je ferme l'ecriture
+  dup2(job->tubes[num_comm-1][0],STDIN_FILENO); // Je transforme la sortie du tube en entrée standard
 }
