@@ -57,9 +57,9 @@ void executer_commandes(job_t *job, ligne_analysee_t *ligne_analysee, struct sig
   for (int i=0; i<ARRAY_SIZE(ligne_analysee->commandes); i++) {
 
     // on lance l'exécution de la commande dans un fils
-    execute_commande_dans_un_fils(job,0,ligne_analysee, sig);
+    execute_commande_dans_un_fils(job,i,ligne_analysee, sig);
 
-    pid_t res_w = waitpid(job->pids[0],NULL,0);
+    pid_t res_w = waitpid(job->pids[i],NULL,0);
     if (res_w==-1) {perror("Echec wait"); exit(errno);}
 
   }
@@ -89,14 +89,6 @@ void gerer_tube_fils_intermediaire(job_t *job, int num_comm){
  * Fait exécuter les commandes de la ligne par des fils
  * -----------------------------------------------------------------------*/
 void gerer_tube_dernier_fils(job_t *job, int num_comm){
-
-
-
-
-
-
-
-
-
-
+  close(job->tubes[num_comm-1][1]); // Je ne fais que lire, je ferme l'ecriture
+  dup2(job->tubes[num_comm-1][0],STDIN_FILENO); // Je transforme la sortie du tube en entrée standard
 }
