@@ -57,14 +57,13 @@ static void affiche_invite(void);
  * -----------------------------------------------------------------------*/
 static void traite_signal(int signal_recu)
 {
-
    switch (signal_recu) {
     case SIGINT:
       printf("\n");
       affiche_invite();
       break;
     default:
-      printf("Signal inattendu %d\n",signal_recu);
+      printf("Signal inattendu (%d)\n",signal_recu);
   }
 }
 
@@ -73,11 +72,11 @@ static void traite_signal(int signal_recu)
  * -----------------------------------------------------------------------*/
 static void initialiser_gestion_signaux(struct sigaction *sig)
 {
-   sig->sa_flags=0;
-   sigemptyset(&sig->sa_mask);
+  sig->sa_handler=SIG_DFL;
+  sigaction(SIGTSTP,sig,NULL);
 
-   sig->sa_handler=traite_signal;
-   sigaction(SIGINT,sig,NULL);
+  sig->sa_handler=traite_signal;
+  sigaction(SIGINT,sig,NULL);
 }
 
 /*--------------------------------------------------------------------------
@@ -104,31 +103,23 @@ static void affiche_invite(void)
 static void execute_ligne(ligne_analysee_t *ligne_analysee, job_set_t *mes_jobs, struct sigaction *sig)
 {
    job_t *j;
-   sig->sa_flags=0;
-   sigemptyset(&sig->sa_mask);
 
    // on extrait les commandes présentes dans la ligne de commande
    // et l'on détermine si elle doit être exécutée en avant-plan
    int isfg=extrait_commandes(ligne_analysee);
 
-   sig->sa_handler=SIG_IGN;
-   sigaction(SIGINT,sig,NULL);
    // s'il ne s'agit pas d'une commande interne au shell,
    // la ligne est exécutée par un ou des fils
-   if (! commande_interne(ligne_analysee,mes_jobs) )
-   {
-      // trouve l'adresse d'une structure libre pour lui associer le job à exécuter
-      j=preparer_nouveau_job(isfg,ligne_analysee->ligne,mes_jobs);
+   if (! commande_interne(ligne_analysee,mes_jobs) ) {
+    // trouve l'adresse d'une structure libre pour lui associer le job à exécuter
+    j=preparer_nouveau_job(isfg,ligne_analysee->ligne,mes_jobs);
 
-         // TODO : à compléter
-
-         // fait exécuter les commandes de la ligne par des fils
-         executer_commandes(j,ligne_analysee, sig);
-
-      // TODO : à compléter
+     // fait exécuter les commandes de la ligne par des fils
+     executer_commandes(j,ligne_analysee, sig);
   }
-  sig->sa_handler=traite_signal;
-  sigaction(SIGINT,sig,NULL);
+
+  initialiser_gestion_signaux(sig);
+  printf("Reactivation des signaux\n");
 
   // ménage
   *ligne_analysee->ligne='\0';
@@ -137,10 +128,12 @@ static void execute_ligne(ligne_analysee_t *ligne_analysee, job_set_t *mes_jobs,
 /*--------------------------------------------------------------------------
  * Fonction principale du mini-shell
  * -----------------------------------------------------------------------*/
-int main(void)
-{
+int main(void) {
    ligne_analysee_t m_ligne_analysee;  // pour l'analyse d'une ligne de commandes
    struct sigaction m_sig;             // structure sigaction pour gérer les signaux
+   m_sig.sa_flags=0;
+   sigemptyset(&m_sig.sa_mask);
+
 
    // initialise les structures de contrôle des jobs
    initialiser_jobs(&g_mes_jobs);
