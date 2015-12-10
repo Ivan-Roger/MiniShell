@@ -44,6 +44,10 @@ static void execute_commande_dans_un_fils(job_t *job,int num_comm, ligne_analyse
     int res_e = execvp(*ligne_analysee->commandes[num_comm],*ligne_analysee->commandes); // On execute la commande avec les arguments
     if (res_e==-1) {perror("Echec execvp"); exit(errno);}
   }
+
+  close (job->tubes[num_comm][0]); // Le père ne lit pas et...
+  close (job->tubes[num_comm][1]); // n'écrit pas dans les tubes qu'il créer.
+
   job->pids[num_comm] = res_f; // On enregistre le numéro du fils;
 }
 /*--------------------------------------------------------------------------
