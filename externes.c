@@ -17,8 +17,10 @@
 /*-------------------------------------------------------------------------------
  * Macro pour éviter le warning "unused parameter" dans une version intermédiaire
  * -----------------------------------------------------------------------------*/
-#define UNUSED(x) (void)(x)
-#define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
+//#define UNUSED(x) (void)(x)
+
+// Macro pour la taille d'un tableau
+#define ARRAY_SIZE(x) (int)(sizeof(x)/sizeof(x[0]))
 
 
 /*--------------------------------------------------------------------------
@@ -49,7 +51,7 @@ static void execute_commande_dans_un_fils(job_t *job,int num_comm, ligne_analyse
       gerer_tube_fils_intermediaire(job,num_comm);
     }
 
-    int res_e = execvp(*ligne_analysee->commandes[num_comm],*ligne_analysee->commandes); // On execute la commande avec les arguments
+    int res_e = execvp(ligne_analysee->commandes[num_comm][0],ligne_analysee->commandes[num_comm]); // On execute la commande avec les arguments
     if (res_e==-1) {perror("Echec execvp"); exit(errno);}
   }
 
