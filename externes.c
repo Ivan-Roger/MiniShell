@@ -46,7 +46,7 @@ static void execute_commande_dans_un_fils(job_t *job,int num_comm, ligne_analyse
   }
 
   close (job->tubes[num_comm][0]); // Le père ne lit pas et...
-  close (job->tubes[num_comm][1]); // n'écrit pas dans les tubes qu'il créer.
+  close (job->tubes[num_comm][1]); // n'écrit pas dans les tubes qu'il crée.
 
   job->pids[num_comm] = res_f; // On enregistre le numéro du fils;
 }
@@ -67,7 +67,7 @@ void executer_commandes(job_t *job, ligne_analysee_t *ligne_analysee, struct sig
     printf("Commande démarée\n");
     pid_t res_w = waitpid(job->pids[i],NULL,0);
     if (res_w==-1) {perror("Echec wait"); exit(errno);}
-    
+
   }
   // on ne se sert plus de la ligne : ménage
   *ligne_analysee->ligne='\0';
@@ -83,7 +83,7 @@ void gerer_tube_premier_fils(job_t *job, int num_comm) {
 }
 
 /*--------------------------------------------------------------------------
- * Gestion de l'entrée et la sortie d'un fils intermédiaire'
+ * Gestion de l'entrée et la sortie d'un fils intermédiaire
  * -----------------------------------------------------------------------*/
 void gerer_tube_fils_intermediaire(job_t *job, int num_comm){
 
@@ -92,7 +92,7 @@ void gerer_tube_fils_intermediaire(job_t *job, int num_comm){
 }
 
 /*--------------------------------------------------------------------------
- * Fait exécuter les commandes de la ligne par des fils
+ * Gestion de l'entrée du dernier fils
  * -----------------------------------------------------------------------*/
 void gerer_tube_dernier_fils(job_t *job, int num_comm){
   close(job->tubes[num_comm-1][1]); // Je ne fais que lire, je ferme l'ecriture
