@@ -12,8 +12,8 @@
  * Utilisée dans mini_shell.c
  * -----------------------------------------------------------------------*/
 void executer_commandes(job_t *job, ligne_analysee_t *ligne_analysee, struct sigaction *sig);
-void gerer_tube_premier_fils();
-void gerer_tube_fils_intermediaire();
-void gerer_tube_dernier_fils();
+void gerer_tube_premier_fils(job_t *job, int num_comm);
+void gerer_tube_fils_intermediaire(job_t *job, int num_comm);
+void gerer_tube_dernier_fils(job_t *job, int num_comm);
 
 #endif

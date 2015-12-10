@@ -32,7 +32,7 @@ static void execute_commande_dans_un_fils(job_t *job,int num_comm, ligne_analyse
   sigemptyset(&sig->sa_mask);
 
   if (num_comm < ligne_analysee->nb_fils) { // On créér le tube uniquement si le fils qui doit être crée n'est pas le dernier.
-    if (pipe(tubes[num_comm])==-1)
+    if (pipe(job->tubes[num_comm])==-1)
       {perror("Echec création tube"); exit(errno);}
   }
 
@@ -65,4 +65,60 @@ void executer_commandes(job_t *job, ligne_analysee_t *ligne_analysee, struct sig
   }
   // on ne se sert plus de la ligne : ménage
   *ligne_analysee->ligne='\0';
+}
+
+/*--------------------------------------------------------------------------
+ * Fait exécuter les commandes de la ligne par des fils
+ * -----------------------------------------------------------------------*/
+void gerer_tube_premier_fils(job_t *job, int num_comm) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+/*--------------------------------------------------------------------------
+ * Fait exécuter les commandes de la ligne par des fils
+ * -----------------------------------------------------------------------*/
+void gerer_tube_fils_intermediaire(job_t *job, int num_comm){
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+/*--------------------------------------------------------------------------
+ * Fait exécuter les commandes de la ligne par des fils
+ * -----------------------------------------------------------------------*/
+void gerer_tube_dernier_fils(job_t *job, int num_comm){
+
+
+
+
+
+
+
+
+
+
 }
