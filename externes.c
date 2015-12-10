@@ -28,9 +28,13 @@
  * -----------------------------------------------------------------------*/
 static void execute_commande_dans_un_fils(job_t *job,int num_comm, ligne_analysee_t *ligne_analysee, struct sigaction *sig)
 {
-  // TODO : supprimer les lignes suivantes et compléter la procédure
-  UNUSED(job); UNUSED(num_comm); UNUSED(ligne_analysee); UNUSED(sig);
-
+  UNUSED(sig);
+  pid_t res_f = fork(); // On crée le fils
+  if (res_f==0) { // Si on est dans le fils :
+    int res_e = execvp(*ligne_analysee->commandes[num_comm],*ligne_analysee->commandes); // On execute la commande avec les arguments
+    if (res_e==-1) {perror("Echec execvp"); exit(errno);}
+  }
+  job->pids[num_comm] = res_f; // On enregistre le numéro du fils;
 }
 /*--------------------------------------------------------------------------
  * Fait exécuter les commandes de la ligne par des fils
@@ -43,10 +47,9 @@ void executer_commandes(job_t *job, ligne_analysee_t *ligne_analysee, struct sig
   // on lance l'exécution de la commande dans un fils
   execute_commande_dans_un_fils(job,0,ligne_analysee, sig);
 
-  // TODO : à compléter
+  pid_t res_w = waitpid(job->pids[0],NULL,0);
+  if (res_w==-1) {perror("Echec wait"); exit(errno);}
 
   // on ne se sert plus de la ligne : ménage
   *ligne_analysee->ligne='\0';
 }
-
-
