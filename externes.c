@@ -68,43 +68,21 @@ void executer_commandes(job_t *job, ligne_analysee_t *ligne_analysee, struct sig
 }
 
 /*--------------------------------------------------------------------------
- * Fait exécuter les commandes de la ligne par des fils
+ * Gestion de la sortie du premier fils
  * -----------------------------------------------------------------------*/
 void gerer_tube_premier_fils(job_t *job, int num_comm) {
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+  close(job->tubes[num_comm][0]); //le premier fils ne lit pas dans le tube
+  dup2(job->tubes[num_comm][1], STDOUT_FILENO); //le premier fils lit depuis stdin et écrit dans le tube
 }
 
 /*--------------------------------------------------------------------------
- * Fait exécuter les commandes de la ligne par des fils
+ * Gestion de l'entrée et la sortie d'un fils intermédiaire'
  * -----------------------------------------------------------------------*/
 void gerer_tube_fils_intermediaire(job_t *job, int num_comm){
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+  dup2(job->tubes[num_comm-1][0], STDIN_FILENO); //un fils intermédaire lit depuis la sortie du tube précédent...
+  dup2(job->tubes[num_comm][1], STDOUT_FILENO); //...et écrit dans l'entrée du tube suivant
 }
 
 /*--------------------------------------------------------------------------
