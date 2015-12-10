@@ -17,7 +17,7 @@
 /*-------------------------------------------------------------------------------
  * Macro pour éviter le warning "unused parameter" dans une version intermédiaire
  * -----------------------------------------------------------------------------*/
-#define UNUSED(x) (void)(x)
+//#define UNUSED(x) (void)(x)
 
 
 
@@ -28,9 +28,13 @@
  * -----------------------------------------------------------------------*/
 static void execute_commande_dans_un_fils(job_t *job,int num_comm, ligne_analysee_t *ligne_analysee, struct sigaction *sig)
 {
-  UNUSED(sig);
+  sig->sa_flags=0;
+  sigemptyset(&sig->sa_mask);
+
   pid_t res_f = fork(); // On crée le fils
   if (res_f==0) { // Si on est dans le fils :
+    sig->sa_handler=SIG_DFL;
+    sigaction(SIGINT,sig,NULL);
     int res_e = execvp(*ligne_analysee->commandes[num_comm],*ligne_analysee->commandes); // On execute la commande avec les arguments
     if (res_e==-1) {perror("Echec execvp"); exit(errno);}
   }
