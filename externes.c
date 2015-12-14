@@ -55,8 +55,10 @@ static void execute_commande_dans_un_fils(job_t *job,int num_comm, ligne_analyse
     }
 
     // DEBUG : Affiche l'entrée et la sortie
-    FILE* finfo=fopen("/dev/pts/2","w");
-    fprintf(finfo," IN: %d\nOUT: %d\n",fileno(stdin),fileno(stdout)); //
+    FILE* finfo=fopen("/dev/pts/4","w");
+    //fprintf(finfo,"1) finfo: %d\r\n",fileno(finfo));
+    fprintf(finfo,"1)  IN: %d\r\n1) OUT: %d\r\n",fileno(stdin),fileno(stdout)); //
+    fprintf(finfo,"2)  IN: %d\r\n2) OUT: %d\r\n",STDIN_FILENO,STDOUT_FILENO);
     fclose(finfo);
 
     int res_e = execvp(ligne_analysee->commandes[num_comm][0],ligne_analysee->commandes[num_comm]); // On execute la commande avec les arguments
@@ -99,6 +101,10 @@ void gerer_tube_premier_fils(job_t *job, int num_comm) {
   printf("    Tube debut OK\n");
   close(job->tubes[num_comm][0]); //le premier fils ne lit pas dans le tube suivant
   dup2(job->tubes[num_comm][1], STDOUT_FILENO); //le premier fils lit depuis stdin et écrit dans le tube suivant
+      // DEBUG : Affiche l'entrée et la sortie
+      FILE* finfo=fopen("/dev/pts/4","w");
+      fprintf(finfo," IN: %d\r\nOUT: %d\r\n",STDIN_FILENO,STDOUT_FILENO);
+      fclose(finfo);
 }
 
 /*--------------------------------------------------------------------------
@@ -108,6 +114,10 @@ void gerer_tube_fils_intermediaire(job_t *job, int num_comm){
   printf("    Tube centre OK\n");
   dup2(job->tubes[num_comm-1][0], STDIN_FILENO); //un fils intermédaire lit depuis la sortie du tube précédent...
   dup2(job->tubes[num_comm][1], STDOUT_FILENO); //...et écrit dans l'entrée du tube suivant
+      // DEBUG : Affiche l'entrée et la sortie
+      FILE* finfo=fopen("/dev/pts/4","w");
+      fprintf(finfo," IN: %d\r\nOUT: %d\r\n",STDIN_FILENO,STDOUT_FILENO);
+      fclose(finfo);
 }
 
 /*--------------------------------------------------------------------------
@@ -117,4 +127,9 @@ void gerer_tube_dernier_fils(job_t *job, int num_comm){
   printf("    Tube fin OK\n");
   close(job->tubes[num_comm-1][1]); //le dernier fils n'écrit pas dans le tube
   dup2(job->tubes[num_comm-1][0],STDIN_FILENO); //le dernier fils lit depuis le tube et écrit dans stdout
+
+      // DEBUG : Affiche l'entrée et la sortie
+      FILE* finfo=fopen("/dev/pts/4","w");
+      fprintf(finfo," IN: %d\r\nOUT: %d\r\n",STDIN_FILENO,STDOUT_FILENO);
+      fclose(finfo);
 }
