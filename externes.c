@@ -48,7 +48,7 @@ static void execute_commande_dans_un_fils(job_t* job,int num_comm, ligne_analyse
         gerer_tube_fils_intermediaire(job,num_comm);
       }
       if (num_comm>=2) {
-        for (int i=num_comm; i>=2; i--) {
+        for (int i=num_comm; i>=2; i--) { // On ferme tous les tubes précédents non utilisés
           close(job->tubes[i-2][0]);
           close(job->tubes[i-2][1]);
         }
@@ -76,7 +76,7 @@ void executer_commandes(job_t* job, ligne_analysee_t *ligne_analysee, struct sig
     // on lance l'éxecution de la commande dans un fils
     execute_commande_dans_un_fils(job,i,ligne_analysee, sig);
   }
-  for (int i=0; i<ligne_analysee->nb_fils-1; i++) {
+  for (int i=0; i<ligne_analysee->nb_fils-1; i++) { // On ferme tous les tubes crée par les fils
     close(job->tubes[i][0]);
     close(job->tubes[i][1]);
   }
@@ -93,8 +93,8 @@ void executer_commandes(job_t* job, ligne_analysee_t *ligne_analysee, struct sig
  * -----------------------------------------------------------------------*/
 void gerer_tube_premier_fils(job_t *job, int num_comm) {
   dup2(job->tubes[num_comm][1], STDOUT_FILENO); //le premier fils lit depuis stdin et écrit dans le tube suivant
-  close(job->tubes[num_comm][1]);
   close(job->tubes[num_comm][0]); //le premier fils ne lit pas dans le tube suivant
+  close(job->tubes[num_comm][1]); // on ferme l'entrée du tube quand on a plus besoin
 }
 
 /*--------------------------------------------------------------------------
@@ -103,10 +103,10 @@ void gerer_tube_premier_fils(job_t *job, int num_comm) {
 void gerer_tube_fils_intermediaire(job_t *job, int num_comm) {
   dup2(job->tubes[num_comm-1][0], STDIN_FILENO); // On lit depuis la sortie du tube précédent
   dup2(job->tubes[num_comm][1], STDOUT_FILENO); // On écrit dans l'entrée du tube suivant
-  close(job->tubes[num_comm-1][0]);
   close(job->tubes[num_comm-1][1]); // On n'ecris pas dans le tube précedent
-  close(job->tubes[num_comm][1]);
   close(job->tubes[num_comm][0]); // On ne lit pas dans le tube suivant
+  close(job->tubes[num_comm-1][0]); // on ferme l'entrée du tube précédent quand on a plus besoin
+  close(job->tubes[num_comm][1]); // on ferme l'entrée du tube suivant quand on a plus besoin
 }
 
 /*--------------------------------------------------------------------------

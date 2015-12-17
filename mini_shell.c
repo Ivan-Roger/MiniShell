@@ -105,8 +105,10 @@ static void execute_ligne(ligne_analysee_t *ligne_analysee, job_set_t *mes_jobs,
    // et l'on détermine si elle doit être exécutée en avant-plan
    int isfg=extrait_commandes(ligne_analysee);
 
+   // On redéfini le Ctrl+C afin qu'il ne puisse pas stopper le père
    sig->sa_handler=SIG_IGN;
    sigaction(SIGINT,sig,NULL);
+
    // s'il ne s'agit pas d'une commande interne au shell,
    // la ligne est exécutée par un ou des fils
    if (! commande_interne(ligne_analysee,mes_jobs) ) {
@@ -139,8 +141,6 @@ int main(void) {
 
    // initialise la structure de contrôle des signaux
    initialiser_gestion_signaux(&m_sig);
-
-   printf("Mini-Shell lancé (pid: %d)\n",getpid());
 
    while(1)
    {
