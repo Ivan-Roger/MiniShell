@@ -72,9 +72,6 @@ static void traite_signal(int signal_recu)
  * -----------------------------------------------------------------------*/
 static void initialiser_gestion_signaux(struct sigaction *sig)
 {
-  sig->sa_handler=SIG_DFL;
-  sigaction(SIGTSTP,sig,NULL);
-
   sig->sa_handler=traite_signal;
   sigaction(SIGINT,sig,NULL);
 }
@@ -108,6 +105,8 @@ static void execute_ligne(ligne_analysee_t *ligne_analysee, job_set_t *mes_jobs,
    // et l'on détermine si elle doit être exécutée en avant-plan
    int isfg=extrait_commandes(ligne_analysee);
 
+   sig->sa_handler=SIG_IGN;
+   sigaction(SIGINT,sig,NULL);
    // s'il ne s'agit pas d'une commande interne au shell,
    // la ligne est exécutée par un ou des fils
    if (! commande_interne(ligne_analysee,mes_jobs) ) {
@@ -118,9 +117,9 @@ static void execute_ligne(ligne_analysee_t *ligne_analysee, job_set_t *mes_jobs,
      executer_commandes(j,ligne_analysee, sig);
   }
 
-  initialiser_gestion_signaux(sig);
-  printf("Reactivation des signaux\n");
-
+//  initialiser_gestion_signaux(sig);
+  sig->sa_handler=traite_signal;
+  sigaction(SIGINT,sig,NULL);
   // ménage
   *ligne_analysee->ligne='\0';
 }
@@ -140,6 +139,8 @@ int main(void) {
 
    // initialise la structure de contrôle des signaux
    initialiser_gestion_signaux(&m_sig);
+
+   printf("Mini-Shell lancé (pid: %d)\n",getpid());
 
    while(1)
    {
