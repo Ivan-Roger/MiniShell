@@ -4,7 +4,7 @@
 /*--------------------------------------------------------------------------
  * header pour le mini-shell où sont définies les constantes
  * -----------------------------------------------------------------------*/
-#define NB_MAX_JOBS 1      // nb max de lignes que l'on peut exécuter concuremment
+#define NB_MAX_JOBS 3      // nb max de lignes que l'on peut exécuter concuremment
 #define NB_MAX_COMMANDES 3 // nb max de commandes sur une ligne
 #define NB_MAX_MOTS 30     // nb max de mots pour une commande
 #define NB_MAX_CAR 4096    // nb max de caractères dans une ligne
@@ -28,6 +28,7 @@ typedef struct job_t
                                       // le job est en cours d'exécution si pids[0]!=-2
   int tubes[NB_MAX_COMMANDES-1][2];   // Tableau des tubes
   int nb_restants;                    // Nombre de fils vivants restants
+  int suspendu;                       // Job suspendu 1 (tous les fils ont reçu SIGTSTP) ou non 0
 } job_t;
 
 /*--------------------------------------------------------------------------

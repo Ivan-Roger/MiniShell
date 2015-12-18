@@ -27,6 +27,7 @@ void initialiser_jobs(job_set_t *mes_jobs)
   for (int j=0; j<NB_MAX_JOBS; j++)
   {
     mes_jobs->jobs[j].nom[0]='\0';
+    mes_jobs->jobs[j].suspendu = 0; // Le job n'est pas suspendu par défaut
     for (int p=0; p<NB_MAX_COMMANDES+1; p++)
       mes_jobs->jobs[j].pids[p]=-2; // -1 signifie n'importe quel pid pour waitpid()
   }
@@ -73,12 +74,14 @@ void action_job(int j, job_t job, int signal, const char*text)
  * -----------------------------------------------------------------------*/
 job_t * preparer_nouveau_job(int isfg, char* ligne, job_set_t *mes_jobs)
 {
-  // si l'on exécute qu'un seul job, il s'exécute toujours en avant-plan et doit être attendu
-  mes_jobs->job_fg=0;
-  if (! isfg) // si le dernier mot de la ligne est "&" on l'ignore
-    printf("Marque d'arrière-plan ignorée : exécution de %s en avant-plan.\n",ligne);
-
-  return mes_jobs->jobs;
+  int num_job=0;
+  while (num_job<NB_MAX_JOBS && mes_jobs.jobs[num_job].pids[0]==-2)
+    i++;
+  if (num_job>=NB_MAX_JOBS) {
+    return NULL;
+  }
+  if (isfg!=0) // si le dernier mot de la ligne n'est pas "&" on exeute en avant plan
+    mes_jobs->job_fg=num_job;
+  return &mes_jobs->jobs[num_job];
 
 }
-
