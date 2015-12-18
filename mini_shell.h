@@ -27,6 +27,7 @@ typedef struct job_t
                                       // pids[p]==0 si le pème fils s'est terminé
                                       // le job est en cours d'exécution si pids[0]!=-2
   int tubes[NB_MAX_COMMANDES-1][2];
+  int nb_restants;
 } job_t;
 
 /*--------------------------------------------------------------------------

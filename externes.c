@@ -68,6 +68,7 @@ void executer_commandes(job_t* job, ligne_analysee_t *ligne_analysee, struct sig
 {
   // recopie de la ligne de commande dans la structure job
   strcpy(job->nom,ligne_analysee->ligne);
+  job->nb_restants = ligne_analysee->nb_fils;
 
   sig->sa_handler=SIG_IGN; // On ignore les signaux
   sigaction(SIGINT,sig,NULL);
@@ -80,9 +81,8 @@ void executer_commandes(job_t* job, ligne_analysee_t *ligne_analysee, struct sig
     close(job->tubes[i][0]);
     close(job->tubes[i][1]);
   }
-  for (int i=0; i<ligne_analysee->nb_fils; i++) {
-    pid_t res_w = waitpid(job->pids[i],NULL,0);
-    if (res_w==-1) {perror("Echec wait"); exit(errno);}
+  while (job->pids[0]!=-2) {
+    pause();
   }
   // on ne se sert plus de la ligne : ménage
   *ligne_analysee->ligne='\0';

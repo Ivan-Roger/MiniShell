@@ -51,19 +51,43 @@ static job_set_t g_mes_jobs;               // pour la gestion des jobs
 
 // Déclaration d'une fonction utilisée dans traite_signal() mais définie plus bas.
 static void affiche_invite(void);
+/*--------------------------------------------------------------------------
+ * fonction qui traite les fils morts
+ * -----------------------------------------------------------------------*/
+static int traite_fils_mort(int pid)
+{
+  int found = 0;
+  for (int id=0; id<NB_MAX_COMMANDES; id++) {
+    if (g_mes_jobs.jobs[g_mes_jobs.job_fg].pids[id]==pid) {
+      g_mes_jobs.jobs[g_mes_jobs.job_fg].pids[id] = 0;
+      found = 1;
+      g_mes_jobs.jobs[g_mes_jobs.job_fg].nb_restants--;
+    }
+  }
+  if (g_mes_jobs.jobs[g_mes_jobs.job_fg].nb_restants==0) {
+    for (int id=0; id<NB_MAX_COMMANDES; id++) {
+      g_mes_jobs.jobs[g_mes_jobs.job_fg].pids[id]=-2;
+    }
+    g_mes_jobs.job_fg=-2;
+  }
+  return found;
+}
 
 /*--------------------------------------------------------------------------
  * handler qui traite les signaux
  * -----------------------------------------------------------------------*/
 static void traite_signal(int signal_recu)
 {
-   switch (signal_recu) {
-    case SIGINT:
-      printf("\n");
-      affiche_invite();
-      break;
-    default:
-      printf("Signal inattendu (%d)\n",signal_recu);
+  if (signal_recu==SIGINT) {
+    printf("\n");
+    affiche_invite();
+  } else if (signal_recu==SIGCHLD) {
+    int res_w;
+    res_w = (int)wait(NULL);
+    if (res_w==-1) {perror("Echec wait"); exit(errno);} // On attends le fils pour eviter qu'il reste zombie
+    if (traite_fils_mort(res_w)==0) {perror("Fils inconnu"); exit(errno);}
+  } else {
+    printf("Signal inattendu (%d)\n",signal_recu);
   }
 }
 
@@ -74,6 +98,7 @@ static void initialiser_gestion_signaux(struct sigaction *sig)
 {
   sig->sa_handler=traite_signal;
   sigaction(SIGINT,sig,NULL);
+  sigaction(SIGCHLD,sig,NULL);
 }
 
 /*--------------------------------------------------------------------------
