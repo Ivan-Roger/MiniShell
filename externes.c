@@ -81,7 +81,7 @@ void executer_commandes(job_t* job, ligne_analysee_t *ligne_analysee, struct sig
     close(job->tubes[i][0]);
     close(job->tubes[i][1]);
   }
-  while (job->pids[0]!=-2) {
+  while (job->pids[0]!=-2) { // On attends que tous les fils soit morts
     pause();
   }
   // on ne se sert plus de la ligne : ménage

@@ -56,19 +56,19 @@ static void affiche_invite(void);
  * -----------------------------------------------------------------------*/
 static int traite_fils_mort(int pid)
 {
-  int found = 0;
-  for (int id=0; id<NB_MAX_COMMANDES; id++) {
-    if (g_mes_jobs.jobs[g_mes_jobs.job_fg].pids[id]==pid) {
-      g_mes_jobs.jobs[g_mes_jobs.job_fg].pids[id] = 0;
-      found = 1;
-      g_mes_jobs.jobs[g_mes_jobs.job_fg].nb_restants--;
+  int found = 0; // Valeur de retour par défaut
+  for (int id=0; id<NB_MAX_COMMANDES; id++) { // On parcours le tableau des fils
+    if (g_mes_jobs.jobs[g_mes_jobs.job_fg].pids[id]==pid) { // Si on trouve le fils
+      g_mes_jobs.jobs[g_mes_jobs.job_fg].pids[id] = 0; // On remet le pid a 0
+      found = 1; // On l'a trouvé
+      g_mes_jobs.jobs[g_mes_jobs.job_fg].nb_restants--; // On decremente le nombre de fils restants
     }
   }
-  if (g_mes_jobs.jobs[g_mes_jobs.job_fg].nb_restants==0) {
-    for (int id=0; id<NB_MAX_COMMANDES; id++) {
-      g_mes_jobs.jobs[g_mes_jobs.job_fg].pids[id]=-2;
+  if (g_mes_jobs.jobs[g_mes_jobs.job_fg].nb_restants==0) { // Si il ne reste plsu de fils vivants
+    for (int id=0; id<NB_MAX_COMMANDES; id++) { // On parcours le tableau des fils morts
+      g_mes_jobs.jobs[g_mes_jobs.job_fg].pids[id]=-2; // On les remets tous a -2
     }
-    g_mes_jobs.job_fg=-2;
+    g_mes_jobs.job_fg=-2; // On mets l'id du fils en avant plan a -2
   }
   return found;
 }
@@ -78,14 +78,14 @@ static int traite_fils_mort(int pid)
  * -----------------------------------------------------------------------*/
 static void traite_signal(int signal_recu)
 {
-  if (signal_recu==SIGINT) {
+  if (signal_recu==SIGINT) { // Ctrl+C
     printf("\n");
     affiche_invite();
-  } else if (signal_recu==SIGCHLD) {
+  } else if (signal_recu==SIGCHLD) { // Fils mort
     int res_w;
-    res_w = (int)wait(NULL);
+    res_w = (int)wait(NULL); // On recupére le fils (et son pid)
     if (res_w==-1) {perror("Echec wait"); exit(errno);} // On attends le fils pour eviter qu'il reste zombie
-    if (traite_fils_mort(res_w)==0) {perror("Fils inconnu"); exit(errno);}
+    if (traite_fils_mort(res_w)==0) {perror("Fils inconnu"); exit(errno);} // On traite les fils mort
   } else {
     printf("Signal inattendu (%d)\n",signal_recu);
   }
@@ -97,8 +97,8 @@ static void traite_signal(int signal_recu)
 static void initialiser_gestion_signaux(struct sigaction *sig)
 {
   sig->sa_handler=traite_signal;
-  sigaction(SIGINT,sig,NULL);
-  sigaction(SIGCHLD,sig,NULL);
+  sigaction(SIGINT,sig,NULL); // On enregistre le handler pour Ctrl+C
+  sigaction(SIGCHLD,sig,NULL); // On enregister le handler pour traiter les fils morts
 }
 
 /*--------------------------------------------------------------------------
