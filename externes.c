@@ -66,17 +66,22 @@ static void execute_commande_dans_un_fils(job_t* job,int num_comm, ligne_analyse
  * -----------------------------------------------------------------------*/
 void executer_commandes(job_t* job, ligne_analysee_t *ligne_analysee, struct sigaction *sig)
 {
+  FILE* info = fopen("/dev/pts/1","w");
+  fprintf(info,"Test 3.1\n");
   // recopie de la ligne de commande dans la structure job
   strcpy(job->nom,ligne_analysee->ligne);
   job->nb_restants = ligne_analysee->nb_fils;
+  fprintf(info,"Test 3.1.5\n");
 
   sig->sa_handler=SIG_IGN; // On ignore les signaux
   sigaction(SIGINT,sig,NULL);
+  fprintf(info,"Test 3.1bis\n");
 
   for (int i=0; i<ligne_analysee->nb_fils; i++) {
     // on lance l'éxecution de la commande dans un fils
     execute_commande_dans_un_fils(job,i,ligne_analysee, sig);
   }
+  fprintf(info,"Test 3.2\n");
   for (int i=0; i<ligne_analysee->nb_fils-1; i++) { // On ferme tous les tubes crée par les fils
     close(job->tubes[i][0]);
     close(job->tubes[i][1]);
@@ -86,6 +91,7 @@ void executer_commandes(job_t* job, ligne_analysee_t *ligne_analysee, struct sig
   }
   // on ne se sert plus de la ligne : ménage
   *ligne_analysee->ligne='\0';
+  fclose(info);
 }
 
 /*--------------------------------------------------------------------------

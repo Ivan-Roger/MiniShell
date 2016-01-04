@@ -57,18 +57,22 @@ static void affiche_invite(void);
 static int traite_fils_mort(int pid)
 {
   int found = 0; // Valeur de retour par défaut
-  for (int id=0; id<NB_MAX_COMMANDES; id++) { // On parcours le tableau des fils
-    if (g_mes_jobs.jobs[g_mes_jobs.job_fg].pids[id]==pid) { // Si on trouve le fils
-      g_mes_jobs.jobs[g_mes_jobs.job_fg].pids[id] = 0; // On remet le pid a 0
-      found = 1; // On l'a trouvé
-      g_mes_jobs.jobs[g_mes_jobs.job_fg].nb_restants--; // On decremente le nombre de fils restants
+  for (int i=0; i<NB_MAX_JOBS; i++) { // On parcours le tableau des jobs
+    for (int id=0; id<NB_MAX_COMMANDES; id++) { // On parcours le tableau des fils du job
+      if (g_mes_jobs.jobs[i].pids[id]==pid) { // Si on trouve le fils
+        g_mes_jobs.jobs[i].pids[id] = 0; // On remet le pid a 0
+        found = 1; // On l'a trouvé
+        g_mes_jobs.jobs[i].nb_restants--; // On decremente le nombre de fils restants
+      }
     }
-  }
-  if (g_mes_jobs.jobs[g_mes_jobs.job_fg].nb_restants==0) { // Si il ne reste plsu de fils vivants
-    for (int id=0; id<NB_MAX_COMMANDES; id++) { // On parcours le tableau des fils morts
-      g_mes_jobs.jobs[g_mes_jobs.job_fg].pids[id]=-2; // On les remets tous a -2
+    if (g_mes_jobs.jobs[i].nb_restants==0) { // Si il ne reste plus de fils vivants dans le job
+      for (int id=0; id<NB_MAX_COMMANDES; id++) { // On parcours le tableau des fils morts
+        g_mes_jobs.jobs[i].pids[id]=-2; // On les remets tous les fils du job a -2
+      }
+      if (i==g_mes_jobs.job_fg) { // Si c'est le fils en avant plan
+        g_mes_jobs.job_fg=-2; // On mets l'id du fils en avant plan a -2
+      }
     }
-    g_mes_jobs.job_fg=-2; // On mets l'id du fils en avant plan a -2
   }
   return found;
 }
@@ -79,8 +83,17 @@ static int traite_fils_mort(int pid)
 static void traite_signal(int signal_recu)
 {
   if (signal_recu==SIGINT) { // Ctrl+C
+    /*
     printf("\n");
     affiche_invite();
+    */
+    action_job(g_mes_jobs.job_fg,g_mes_jobs.jobs[g_mes_jobs.job_fg],SIGKILL,"");
+  } else if (signal_recu==SIGTSTP) { // Ctrl+Z
+    /*
+    printf("\n");
+    affiche_invite();
+    */
+    action_job(g_mes_jobs.job_fg,g_mes_jobs.jobs[g_mes_jobs.job_fg],SIGSTOP,"");
   } else if (signal_recu==SIGCHLD) { // Fils mort
     int res_w;
     res_w = (int)wait(NULL); // On recupére le fils (et son pid)
@@ -98,6 +111,7 @@ static void initialiser_gestion_signaux(struct sigaction *sig)
 {
   sig->sa_handler=traite_signal;
   sigaction(SIGINT,sig,NULL); // On enregistre le handler pour Ctrl+C
+  sigaction(SIGTSTP,sig,NULL); // On enregistre le handler pour Ctrl+Z
   sigaction(SIGCHLD,sig,NULL); // On enregister le handler pour traiter les fils morts
 }
 
@@ -126,29 +140,41 @@ static void execute_ligne(ligne_analysee_t *ligne_analysee, job_set_t *mes_jobs,
 {
    job_t *j;
 
+   FILE* info = fopen("/dev/pts/1","w");
+   fprintf(info,"Test 1\n");
    // on extrait les commandes présentes dans la ligne de commande
    // et l'on détermine si elle doit être exécutée en avant-plan
    int isfg=extrait_commandes(ligne_analysee);
+   fprintf(info,"Test 2\n");
 
+   /*
    // On redéfini le Ctrl+C afin qu'il ne puisse pas stopper le père
    sig->sa_handler=SIG_IGN;
    sigaction(SIGINT,sig,NULL);
+   */
 
    // s'il ne s'agit pas d'une commande interne au shell,
    // la ligne est exécutée par un ou des fils
    if (! commande_interne(ligne_analysee,mes_jobs) ) {
+     fprintf(info,"Test 3\n");
     // trouve l'adresse d'une structure libre pour lui associer le job à exécuter
     j=preparer_nouveau_job(isfg,ligne_analysee->ligne,mes_jobs);
+    fprintf(info,"Test 3bis\n");
 
      // fait exécuter les commandes de la ligne par des fils
      executer_commandes(j,ligne_analysee, sig);
-  }
+     fprintf(info,"Test NumeroBis\n");
 
+  }
+  fprintf(info,"Test 4\n");
+  /*
 //  initialiser_gestion_signaux(sig);
   sig->sa_handler=traite_signal;
   sigaction(SIGINT,sig,NULL);
+  */
   // ménage
   *ligne_analysee->ligne='\0';
+   fclose(info);
 }
 
 /*--------------------------------------------------------------------------
