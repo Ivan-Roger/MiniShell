@@ -107,7 +107,8 @@ static void initialiser_gestion_signaux(struct sigaction *sig)
 static void affiche_invite(void)
 {
    // TODO à modifier : insérer le nom du répertoire courant
-   char* nom_complet_dir = get_current_dir_name(); // Retourne le chemin absolu du repertoire courant
+   char nom_complet_dir[1024];
+   getcwd(nom_complet_dir, 1024); // Retourne le chemin absolu du repertoire courant
    char* nom_dir = strrchr(nom_complet_dir,'/'); // Recupère le nom du dossier courant precedé d'un '/'
 
    strncpy(nom_dir,nom_dir+1,strlen(nom_dir)-1); // On enlève le '/' (déplace la chaine)
@@ -115,7 +116,7 @@ static void affiche_invite(void)
 
    printf("%s> ",nom_dir);
    fflush(stdout); // Force a afficher le buffer de texte
-   free(nom_complet_dir);
+   //free(nom_complet_dir);
 }
 
 /*--------------------------------------------------------------------------
